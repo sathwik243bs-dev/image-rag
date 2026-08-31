@@ -66,3 +66,58 @@ vectors =embeddings.embed_documents(
 )
 print("number of embeddings:",len(vectors))
 print(len(vectors[0]))
+
+from langchain_chroma import Chroma
+
+vector_store =Chroma.from_documents(
+    documents=chunks,
+    embedding=embeddings,
+    persist_directory="chroma_db"
+)
+print("embiddings stored succesfuly in database")
+
+retriver =vector_store.as_retriever(
+    search_kwargs={"k":2}
+)
+quetion="give me the introdution "
+retrived_docs=retriver.invoke(quetion)
+for i,doc in enumerate(retrived_docs):
+    print(f"\nDocument{i+1}:")
+    print(doc.page_content)
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+
+prompt = ChatPromptTemplate.from_template("""
+Answer the question using only the context below.
+
+Context:
+{context}
+
+Question:
+{question}
+
+If the answer is not available in the context, say:
+"Answer is not available in the image."
+""")
+
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+
+question = "What is the safety policy?"
+
+retrieved_docs = retriver.invoke(question)
+
+context = format_docs(retrieved_docs)
+
+messages = prompt.invoke({
+    "context": context,
+    "question": question
+})
+
+response = llm.invoke(messages)
+
+print(response.content)    
