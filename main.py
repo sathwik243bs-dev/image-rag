@@ -55,6 +55,14 @@ text_splitter =RecursiveCharacterTextSplitter(chunk_size=500,
 chunks =text_splitter.split_documents(docs)
 print(len(chunks))
 
-for i ,chunk in enumerate(chunks):
-    print(f"\nchunk{i+1}:")
-    print(chunk.page_content)
+# for i ,chunk in enumerate(chunks):
+#     print(f"\nchunk{i+1}:")
+#     print(chunk.page_content)
+
+from langchain_huggingface import HuggingFaceEmbeddings
+embeddings= HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+vectors =embeddings.embed_documents(
+    [chunk.page_content for chunk in chunks]
+)
+print("number of embeddings:",len(vectors))
+print(len(vectors[0]))
